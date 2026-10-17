@@ -1,0 +1,375 @@
+{% extends "base.html" %}
+
+{% block title %}Student Portal — {{ student.name }} ({{ student.roll_no }}){% endblock %}
+
+{% block content %}
+<div class="form-page-wrapper" style="max-width: 1060px;">
+    <!-- Student Header Banner -->
+    <div class="form-header-card">
+        <div class="form-header-left">
+            <div class="roll-badge-large">
+                <span class="roll-label">Roll No</span>
+                <span class="roll-number">{{ student.roll_no }}</span>
+            </div>
+            <div class="form-header-meta">
+                <h1 class="form-main-title">{{ student.name }}</h1>
+                <p class="form-subtitle">
+                    <strong>Class:</strong> {{ student.class_name }} &bull; 
+                    <strong>Email:</strong> {{ student.email }} &bull; 
+                    <strong>Phone:</strong> {{ student.phone }}
+                </p>
+            </div>
+        </div>
+
+        <div class="form-header-actions">
+            {% if has_excel %}
+                <a href="{{ url_for('download_student_excel', roll_no=student.roll_no, token=token) }}" class="btn btn-success" title="Download your complete 5-sheet Excel workbook">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    <span>Download Excel Record (.xlsx)</span>
+                </a>
+            {% endif %}
+
+            {% if is_admin %}
+                <a href="{{ url_for('edit_student', roll_no=student.roll_no) }}" class="btn btn-secondary">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                    <span>Edit Record</span>
+                </a>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-outline">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                    <span>Dashboard</span>
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Live Performance Stats from Excel -->
+    <div class="stats-grid" style="margin-bottom: 1.5rem;">
+        <div class="stat-card">
+            <div class="stat-icon stat-icon-green">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 14 14"></polyline>
+                </svg>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">Overall Attendance</span>
+                <span class="stat-value" style="font-size: 1.4rem; color: #10B981;">
+                    {{ excel_data.stats.attendance_pct }}
+                </span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon stat-icon-purple">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">Academic Grade</span>
+                <span class="stat-value" style="font-size: 1.4rem; color: #7C3AED;">
+                    Grade {{ excel_data.stats.average_grade }} ({{ excel_data.stats.average_marks }})
+                </span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon stat-icon-blue">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                </svg>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">Assignments Uploaded</span>
+                <span class="stat-value" style="font-size: 1.4rem;">{{ assignments|length }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ASSIGNMENT UPLOAD SECTION -->
+    <div class="card" style="margin-bottom: 1.5rem; border-left: 4px solid var(--primary);">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem;">
+            <div>
+                <h2 class="card-title" style="margin-bottom: 0.2rem;">Upload Assignment</h2>
+                <p class="card-desc" style="margin-bottom: 0;">Submit your homework or coursework. Each upload is saved securely under your roll number and automatically logged into Sheet 4 of your Excel file.</p>
+            </div>
+            <span class="badge badge-course">Max 10 MB &bull; PDF, DOC, DOCX, Images</span>
+        </div>
+
+        <form action="{{ url_for('upload_assignment', roll_no=student.roll_no) }}" method="POST" enctype="multipart/form-data" class="upload-form" style="margin-top: 1rem;">
+            <input type="hidden" name="token" value="{{ token }}">
+
+            <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+                <input 
+                    type="file" 
+                    name="assignment_file" 
+                    id="assignmentFileInput" 
+                    class="form-input" 
+                    accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.webp" 
+                    required 
+                    style="flex: 1; min-width: 260px;"
+                >
+                <button type="submit" class="btn btn-primary" id="btnUploadSubmit">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    <span>Upload &amp; Log to Excel</span>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- SUBMITTED ASSIGNMENTS HISTORY TABLE (Sheet 4) -->
+    <div class="card" style="margin-bottom: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap;">
+            <div>
+                <h2 class="card-title" style="margin-bottom: 0.2rem;">Submitted Assignments</h2>
+                <p class="card-desc" style="margin-bottom: 0;">Uploaded files linked to your roll number and recorded in Sheet 4 of your Excel file.</p>
+            </div>
+            <span class="badge" style="background: #eef2ff; color: #4338ca; font-weight: 700;">{{ assignments|length }} Total Files</span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="students-table">
+                <thead>
+                    <tr>
+                        <th>File Name</th>
+                        <th>Upload Timestamp</th>
+                        <th>File Size</th>
+                        <th>Status</th>
+                        <th class="text-right">Download</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if assignments %}
+                        {% for a in assignments %}
+                            <tr>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--primary);">
+                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                            <polyline points="14 2 14 8 20 8"></polyline>
+                                        </svg>
+                                        <strong>{{ a.original_name }}</strong>
+                                    </div>
+                                </td>
+                                <td><span class="timestamp">{{ a.upload_time }}</span></td>
+                                <td>
+                                    <span class="badge badge-course">
+                                        {% if a.file_size < 1048576 %}
+                                            {{ (a.file_size / 1024)|round(1) }} KB
+                                        {% else %}
+                                            {{ (a.file_size / 1048576)|round(2) }} MB
+                                        {% endif %}
+                                    </span>
+                                </td>
+                                <td><span class="badge" style="background: #ecfdf5; color: #065f46;">Logged in Excel</span></td>
+                                <td class="text-right">
+                                    <a href="{{ url_for('download_assignment', assignment_id=a.id, token=token) }}" class="btn-icon btn-icon-blue" title="Download submitted file">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                            <polyline points="7 10 12 15 17 10"></polyline>
+                                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                                        </svg>
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="empty-state-cell" style="padding: 2rem 1rem !important;">
+                                <div class="empty-state">
+                                    <p>No assignments submitted yet. Use the upload box above to submit your first file.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- MARKS & GRADES TABLE (Sheet 3) -->
+    <div class="card" style="margin-bottom: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap;">
+            <div>
+                <h2 class="card-title" style="margin-bottom: 0.2rem;">Marks &amp; Academic Grades</h2>
+                <p class="card-desc" style="margin-bottom: 0;">Examination performance recorded in Sheet 3 ("Marks &amp; Grades") of your Excel file.</p>
+            </div>
+            <span class="badge" style="background: #fdf2f8; color: #be185d; font-weight: 700;">Overall: {{ excel_data.stats.average_marks }}</span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="students-table">
+                <thead>
+                    <tr>
+                        <th>Subject Code</th>
+                        <th>Subject Name</th>
+                        <th>Exam Type</th>
+                        <th>Max Marks</th>
+                        <th>Marks Obtained</th>
+                        <th>Grade</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if excel_data.marks %}
+                        {% for m in excel_data.marks %}
+                            <tr>
+                                <td><span class="badge badge-roll">{{ m.code }}</span></td>
+                                <td><strong>{{ m.name }}</strong></td>
+                                <td>{{ m.exam_type }}</td>
+                                <td>{{ m.max_marks }}</td>
+                                <td><strong>{{ m.obtained }}</strong></td>
+                                <td>
+                                    <span class="badge" style="background: #ede9fe; color: #6d28d9; font-weight: 700;">{{ m.grade }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge" style="background: #ecfdf5; color: #047857;">{{ m.status }}</span>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="7" class="empty-state-cell" style="padding: 1.5rem !important;">
+                                <p>No examination marks recorded yet.</p>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ATTENDANCE RECORD (Sheet 2) -->
+    <div class="card" style="margin-bottom: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap;">
+            <div>
+                <h2 class="card-title" style="margin-bottom: 0.2rem;">Attendance Log</h2>
+                <p class="card-desc" style="margin-bottom: 0;">Attendance history recorded in Sheet 2 ("Attendance") of your Excel workbook.</p>
+            </div>
+            <span class="badge" style="background: #ecfdf5; color: #047857; font-weight: 700;">Rate: {{ excel_data.stats.attendance_pct }}</span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="students-table">
+                <thead>
+                    <tr>
+                        <th>Month / Term</th>
+                        <th>Total Classes</th>
+                        <th>Days Attended</th>
+                        <th>Attendance (%)</th>
+                        <th>Standing Status</th>
+                        <th>Remarks</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if excel_data.attendance %}
+                        {% for att in excel_data.attendance %}
+                            <tr>
+                                <td><strong>{{ att.term }}</strong></td>
+                                <td>{{ att.total_classes }}</td>
+                                <td>{{ att.attended }}</td>
+                                <td><strong style="color: #10B981;">{{ att.pct }}</strong></td>
+                                <td>
+                                    <span class="badge" style="background: #f0fdf4; color: #15803d;">{{ att.status }}</span>
+                                </td>
+                                <td><span style="color: #4b5563; font-size: 0.9rem;">{{ att.remarks }}</span></td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="empty-state-cell" style="padding: 1.5rem !important;">
+                                <p>No attendance entries found in workbook.</p>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- REMARKS & FEEDBACK (Sheet 5) -->
+    {% if excel_data.remarks %}
+        <div class="card" style="margin-bottom: 1.5rem;">
+            <h2 class="card-title" style="margin-bottom: 0.2rem;">Faculty Remarks &amp; Feedback</h2>
+            <p class="card-desc" style="margin-bottom: 1rem;">Teacher evaluations recorded in Sheet 5 of your Excel workbook.</p>
+
+            <div class="table-responsive">
+                <table class="students-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Added By</th>
+                            <th>Category</th>
+                            <th>Remarks / Evaluation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in excel_data.remarks %}
+                            <tr>
+                                <td><span class="timestamp">{{ r.date }}</span></td>
+                                <td><strong>{{ r.author }}</strong></td>
+                                <td><span class="badge badge-course">{{ r.category }}</span></td>
+                                <td>{{ r.text }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- STUDENT DETAILS & PROFILE (Sheet 1) -->
+    <div class="card">
+        <h2 class="card-title" style="margin-bottom: 0.35rem;">Student Profile &amp; Registration Records</h2>
+        <p class="card-desc">Personal details saved in Sheet 1 of your Excel file.</p>
+
+        <div class="form-grid" style="margin-top: 1rem;">
+            <div>
+                <span class="stat-label">Full Name</span>
+                <p style="font-weight: 600; font-size: 1rem; color: var(--text-main);">{{ student.name }}</p>
+            </div>
+            <div>
+                <span class="stat-label">Father's Name</span>
+                <p style="font-weight: 600; font-size: 1rem; color: var(--text-main);">{{ student.father_name or '—' }}</p>
+            </div>
+            <div>
+                <span class="stat-label">Class / Course</span>
+                <p style="font-weight: 600; font-size: 1rem; color: var(--text-main);">{{ student.class_name }}</p>
+            </div>
+            <div>
+                <span class="stat-label">Date of Birth</span>
+                <p style="font-weight: 600; font-size: 1rem; color: var(--text-main);">{{ student.dob or '—' }}</p>
+            </div>
+            <div>
+                <span class="stat-label">Phone Number</span>
+                <p style="font-weight: 600; font-size: 1rem; color: var(--text-main);">{{ student.phone }}</p>
+            </div>
+            <div>
+                <span class="stat-label">Email Address</span>
+                <p style="font-weight: 600; font-size: 1rem; color: var(--text-main);">{{ student.email }}</p>
+            </div>
+            <div class="full-width">
+                <span class="stat-label">Residential Address</span>
+                <p style="font-weight: 500; font-size: 0.95rem; color: var(--text-muted);">{{ student.address or '—' }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

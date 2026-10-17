@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Sign In — Student Management System{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="auth-icon-circle">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+            </div>
+            <h1 class="auth-title">Admin Portal</h1>
+            <p class="auth-desc">Sign in with your administrative credentials to manage student profiles and generate roll number links.</p>
+        </div>
+
+        <form action="{{ url_for('login', next=request.args.get('next', '')) }}" method="POST" class="auth-form" id="loginForm">
+            <div class="form-group">
+                <label for="username" class="form-label">Admin Username</label>
+                <div class="input-with-icon">
+                    <span class="field-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                    </span>
+                    <input 
+                        type="text" 
+                        id="username" 
+                        name="username" 
+                        class="form-input" 
+                        placeholder="Enter username" 
+                        value="admin"
+                        required 
+                        autocomplete="username"
+                        autofocus
+                    >
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="label-row">
+                    <label for="password" class="form-label">Password</label>
+                </div>
+                <div class="input-with-icon">
+                    <span class="field-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                    </span>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        class="form-input" 
+                        placeholder="Enter password" 
+                        value="admin123"
+                        required 
+                        autocomplete="current-password"
+                    >
+                    <button type="button" class="btn-toggle-pw" onclick="togglePasswordVisibility('password', this)" title="Show/Hide Password">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block btn-lg">
+                <span>Sign In to Dashboard</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+            </button>
+        </form>
+
+        <div class="demo-credentials-box">
+            <div class="demo-badge-title">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                Default Admin Credentials
+            </div>
+            <div class="demo-credentials-grid">
+                <div><span>Username:</span> <strong>admin</strong></div>
+                <div><span>Password:</span> <strong>admin123</strong></div>
+            </div>
+            <p class="demo-hint">Click "Sign In to Dashboard" to enter immediately.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
